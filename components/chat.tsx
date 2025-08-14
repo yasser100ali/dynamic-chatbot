@@ -5,11 +5,16 @@ import { MultimodalInput } from "@/components/multimodal-input";
 import { Overview } from "@/components/overview";
 import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 import { ToolInvocation } from "ai";
+import { useSessionStorage } from "usehooks-ts";
 import { useChat } from "ai/react";
 import { toast } from "sonner";
 
 export function Chat() {
   const chatId = "001";
+  const [presentationMeta] = useSessionStorage<any | null>(
+    "presentation_meta",
+    null,
+  );
 
   const {
     messages,
@@ -23,6 +28,17 @@ export function Chat() {
   } = useChat({
     api: "/api/chat",
     maxSteps: 4,
+    body: presentationMeta?.rawPreview
+      ? {
+          // Inject a dynamic system message on the client side when available.
+          // Server will respect the earliest system message prepended.
+          system: {
+            title: presentationMeta.title,
+            rawPreview: presentationMeta.rawPreview,
+            systemPrompt: presentationMeta.systemPrompt,
+          },
+        }
+      : undefined,
     onError: (error) => {
       if (error.message.includes("Too many requests")) {
         toast.error(
@@ -36,7 +52,7 @@ export function Chat() {
     useScrollToBottom<HTMLDivElement>();
 
   return (
-    <div className="flex flex-col min-w-0 h-[calc(100dvh-52px)] bg-background">
+    <div className="flex flex-col min-w-0 h-[calc(100dvh-52px)]">
       <div
         ref={messagesContainerRef}
         className="flex flex-col min-w-0 gap-6 flex-1 overflow-y-scroll pt-4"

@@ -37,7 +37,5 @@ uvicorn==0.30.3
 uvloop
 watchfiles
 websockets==12.0
-langchain
-langchain-openai
-jobspy
-langchain-community
+# Removed langchain-related packages and job tooling since agents were deleted
+pypdf==4.3.1

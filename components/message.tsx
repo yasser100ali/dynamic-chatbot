@@ -7,7 +7,7 @@ import { SparklesIcon } from "./icons";
 import { Markdown } from "./markdown";
 import { PreviewAttachment } from "./preview-attachment";
 import { cn } from "@/lib/utils";
-import { Weather } from "./weather";
+// Weather UI removed along with weather tool
 
 export const PreviewMessage = ({
   message,
@@ -29,7 +29,7 @@ export const PreviewMessage = ({
         )}
       >
         {message.role === "assistant" && (
-          <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border">
+          <div className="size-8 flex items-center rounded-full justify-center ring-1 shrink-0 ring-border bg-gradient-to-br from-purple-500/20 via-blue-500/20 to-cyan-500/20">
             <SparklesIcon size={14} />
           </div>
         )}
@@ -48,27 +48,13 @@ export const PreviewMessage = ({
 
                 if (state === "result") {
                   const { result } = toolInvocation;
-
                   return (
                     <div key={toolCallId}>
-                      {toolName === "get_current_weather" ? (
-                        <Weather weatherAtLocation={result} />
-                      ) : (
-                        <pre>{JSON.stringify(result, null, 2)}</pre>
-                      )}
+                      <pre>{JSON.stringify(result, null, 2)}</pre>
                     </div>
                   );
                 }
-                return (
-                  <div
-                    key={toolCallId}
-                    className={cn({
-                      skeleton: ["get_current_weather"].includes(toolName),
-                    })}
-                  >
-                    {toolName === "get_current_weather" ? <Weather /> : null}
-                  </div>
-                );
+                return <div key={toolCallId} />;
               })}
             </div>
           )}

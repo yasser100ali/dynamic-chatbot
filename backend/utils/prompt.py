@@ -83,3 +83,35 @@ def convert_to_openai_messages(messages: List[ClientMessage]) -> List[ChatComple
                 openai_messages.append(tool_message)
 
     return openai_messages
+
+# Generic base system prompt for any presentation/topic.
+HEALTHCARE_SYSTEM_PROMPT = """
+You are an educational chatbot that answers concisely, factually, and in a well-structured format. Always:
+- Be clear and organized with short sections, bullet points, and small tables where helpful.
+- State assumptions and uncertainty; avoid fabricating citations or facts.
+- Focus on the user's question first; ask a brief clarifying question if the prompt is ambiguous.
+- Keep responses compact (typically under 200 words) unless asked for depth.
+"""
+
+
+def build_dynamic_system_prompt(presentation_title: str, raw_preview: str) -> str:
+    """Create a short, focused system prompt grounded in the uploaded presentation.
+
+    The preview should be a compact extract from the PDF text. We keep the
+    same safety and style tenets, but make the assistant condition its answers
+    on the uploaded content where possible.
+    """
+    base = HEALTHCARE_SYSTEM_PROMPT
+    preface = f"""
+Adapt to the uploaded presentation: "{presentation_title}".
+Ground answers primarily in this deck. When outside scope, say so briefly and proceed with general knowledge if appropriate.
+Use this excerpt to anchor context (do not repeat verbatim unless asked):
+
+--- Presentation excerpt (truncated) ---
+{raw_preview[:2000]}
+--- End excerpt ---
+
+Generate a specialized persona and topic framing consistent with the deck. Prefer concise summaries, key takeaways, and actionable suggestions.
+If the question is outside the presentation, note that explicitly.
+"""
+    return preface + "\n\n" + base

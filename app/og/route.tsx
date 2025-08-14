@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   return new ImageResponse(
     (
       <div
-        tw="flex h-full w-full bg-black"
+        tw="flex h-full w-full"
         style={{ fontFamily: "Geist Sans" }}
       >
         {/* @ts-expect-error */}
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
               textWrap: "balance",
               fontWeight: 500,
               fontSize: 80,
-              color: "black",
+              color: "white",
               letterSpacing: "-0.05em",
             }}
           >

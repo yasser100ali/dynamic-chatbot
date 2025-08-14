@@ -1,9 +1,10 @@
 import os
 import json
 from typing import List
+import webbrowser
 from openai import OpenAI
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
-from .tools import get_current_weather
+# No external tools (weather tool removed)
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -12,9 +13,7 @@ client = OpenAI(
     api_key=os.environ.get("OPENAI_API_KEY"),
 )
 
-available_tools = {
-    "get_current_weather": get_current_weather,
-}
+available_tools = {}
 
 def stream_text(messages: List[ChatCompletionMessageParam], protocol: str = 'data'):
     draft_tool_calls = []
@@ -22,29 +21,8 @@ def stream_text(messages: List[ChatCompletionMessageParam], protocol: str = 'dat
 
     stream = client.chat.completions.create(
         messages=messages,
-        model="gpt-4o",
-        stream=True,
-        tools=[{
-            "type": "function",
-            "function": {
-                "name": "get_current_weather",
-                "description": "Get the current weather at a location",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "latitude": {
-                            "type": "number",
-                            "description": "The latitude of the location",
-                        },
-                        "longitude": {
-                            "type": "number",
-                            "description": "The longitude of the location",
-                        },
-                    },
-                    "required": ["latitude", "longitude"],
-                },
-            },
-        }]
+        model="gpt-5-mini",
+        stream=True
     )
 
     finish_reason = None

@@ -4,13 +4,13 @@ import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const metadata = {
-  title: "AI SDK Python Streaming Preview",
+  title: "Kaiser Healthcare AI Copilot",
   description:
-    "Use the Data Stream Protocol to stream chat completions from a Python endpoint (FastAPI) and display them using the useChat hook in your Next.js application.",
+    "Ask an expert about AI in healthcare: operations, early diagnosis, agents, RLHF, safety, and the dawn of superintelligence.",
   openGraph: {
     images: [
       {
-        url: "/og?title=AI SDK Python Streaming Preview",
+        url: "/og?title=Kaiser Healthcare AI Copilot",
       },
     ],
   },
@@ -18,7 +18,7 @@ export const metadata = {
     card: "summary_large_image",
     images: [
       {
-        url: "/og?title=AI SDK Python Streaming Preview",
+        url: "/og?title=Kaiser Healthcare AI Copilot",
       },
     ],
   },
@@ -32,7 +32,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head></head>
-      <body className={cn(GeistSans.className, "antialiased dark")}>
+      <body className={cn(GeistSans.className, "antialiased dark")}> 
         <Toaster position="top-center" richColors />
         {children}
       </body>
