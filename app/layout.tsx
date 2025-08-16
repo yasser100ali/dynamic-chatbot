@@ -2,6 +2,7 @@ import "./globals.css";
 import { GeistSans } from "geist/font/sans";
 import { Toaster } from "sonner";
 import { cn } from "@/lib/utils";
+import { ClientInitReset } from "@/components/client-init";
 
 export const metadata = {
   title: "Kaiser Healthcare AI Copilot",
@@ -34,6 +35,7 @@ export default function RootLayout({
       <head></head>
       <body className={cn(GeistSans.className, "antialiased dark")}> 
         <Toaster position="top-center" richColors />
+        <ClientInitReset />
         {children}
       </body>
     </html>

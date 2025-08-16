@@ -76,7 +76,7 @@ async def presentation_meta(req: PresentationMetaRequest):
         pdf_bytes = b64decode(match.group(1), validate=False)
         reader = PdfReader(BytesIO(pdf_bytes))
         text_chunks = []
-        for page in reader.pages[:8]:  # limit for speed
+        for page in reader.pages[:20]:  # read more pages to improve coverage
             try:
                 text_chunks.append(page.extract_text() or "")
             except Exception:
@@ -90,6 +90,24 @@ async def presentation_meta(req: PresentationMetaRequest):
     title = None
     description = None
     suggested = []
+    topics = []
+    
+    def _extract_json(text: str) -> dict:
+        import json as _json
+        # Some models may wrap JSON in prose or code fences; try to extract the first JSON object
+        text_strip = text.strip()
+        if text_strip.startswith("{") and text_strip.endswith("}"):
+            return _json.loads(text_strip)
+        # Find the first opening brace and last closing brace
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            try:
+                return _json.loads(text[start:end+1])
+            except Exception:
+                pass
+        # Fallback
+        return {}
     try:
         ai = OpenAI()
         chat = ai.chat.completions.create(
@@ -98,30 +116,32 @@ async def presentation_meta(req: PresentationMetaRequest):
                 {
                     "role": "system",
                     "content": (
-                        "You are a helpful assistant that extracts presentation metadata and writes a succinct, high-quality system prompt for a chatbot specialized in that presentation."
+                        "Return STRICT JSON only, no prose. Read slide text and produce: "
+                        "title (short), description (single sentence), systemPrompt (concise, high quality), "
+                        "topics (8-12 concise bullet points summarizing core ideas), "
+                        "suggestedActions (5-8 objects with title, label, action that lead to useful follow-ups). "
+                        "Avoid trivial/boilerplate like authorship, agenda, Q&A, or thank-you slides."
                     ),
                 },
                 {
                     "role": "user",
                     "content": (
-                        "Given the following extracted text from a slide deck, return strict JSON with keys: "
-                        "title (short), description (one sentence), systemPrompt (well-written, concise), "
-                        "suggestedActions (array of 4-6 objects with title, label, action). Do not include any additional prose.\n\n"
-                        f"TEXT:\n{raw_text[:6000]}"
+                        f"TEXT:\n{raw_text[:6000]}\n\n"
+                        "Return JSON with keys exactly: {\"title\", \"description\", \"systemPrompt\", \"topics\", \"suggestedActions\"}."
                     ),
                 },
             ],
             temperature=0.2,
         )
         content = chat.choices[0].message.content or "{}"
-        import json as _json
-
-        parsed = _json.loads(content)
+        parsed = _extract_json(content)
         title = parsed.get("title")
         description = parsed.get("description")
         system_prompt = parsed.get("systemPrompt")
         if isinstance(parsed.get("suggestedActions"), list):
             suggested = parsed.get("suggestedActions")
+        if isinstance(parsed.get("topics"), list):
+            topics = parsed.get("topics")
     except Exception:
         pass
 
@@ -136,26 +156,100 @@ async def presentation_meta(req: PresentationMetaRequest):
     if not description:
         description = "This chatbot adapts to your uploaded presentation, summarizing sections and answering questions grounded in the file."
 
+    def _is_trivial(text: str) -> bool:
+        if not text:
+            return True
+        t = text.strip().lower()
+        bad_prefixes = [
+            "by ",
+            "agenda",
+            "table of contents",
+            "contents",
+            "q&a",
+            "qa",
+            "thank you",
+            "thanks",
+            "overview",
+        ]
+        return any(t.startswith(p) for p in bad_prefixes)
+
+    if suggested:
+        cleaned = []
+        for a in suggested:
+            title_a = (a.get("title") or "").strip()
+            label_a = (a.get("label") or "").strip()
+            action_a = (a.get("action") or "").strip()
+            if not _is_trivial(title_a) and len(title_a) >= 3:
+                cleaned.append({"title": title_a, "label": label_a, "action": action_a})
+        suggested = cleaned[:8]
+
     if not suggested:
         lines = [ln.strip() for ln in raw_text.splitlines() if ln.strip()]
         headings = []
         for ln in lines:
             if len(ln) < 120 and (ln.istitle() or ln.isupper() or re.match(r"^[-•\d]", ln)):
-                headings.append(ln.strip("-• "))
-            if len(headings) >= 6:
+                cand = ln.strip("-• ")
+                if not _is_trivial(cand):
+                    headings.append(cand)
+            if len(headings) >= 10:
                 break
-        for h in headings[:4]:
+        for h in headings[:6]:
             suggested.append({
                 "title": h[:60],
                 "label": f"Ask about: {h[:80]}",
                 "action": f"From the presentation, explain the section titled '{h}'. Summarize key points and implications.",
             })
 
+    # Ensure topics are present; if empty, try a last-resort AI pass
+    if not topics:
+        try:
+            ai2 = OpenAI()
+            chat2 = ai2.chat.completions.create(
+                model="gpt-5-mini",
+                messages=[
+                    {"role": "system", "content": "Return a JSON array of 8-12 short bullet topics for the deck. No prose."},
+                    {"role": "user", "content": f"TEXT:\n{raw_text[:6000]}"},
+                ],
+                temperature=0.2,
+            )
+            import json as _json
+            raw2 = chat2.choices[0].message.content or "[]"
+            s = raw2.strip()
+            if not s.startswith("["):
+                start = s.find("[")
+                end = s.rfind("]")
+                if start != -1 and end != -1 and end > start:
+                    s = s[start:end+1]
+            arr = _json.loads(s)
+            if isinstance(arr, list):
+                def _clean_topic(t: str) -> str:
+                    t2 = t.strip()
+                    lower = t2.lower()
+                    blacklist_prefixes = [
+                        "by ",
+                        "contents",
+                        "table of contents",
+                        "agenda",
+                        "q&a",
+                        "qa",
+                        "thank",
+                        "thanks",
+                        "overview",
+                    ]
+                    for b in blacklist_prefixes:
+                        if lower.startswith(b):
+                            return ""
+                    return t2
+                topics = [t for t in map(_clean_topic, arr) if isinstance(t, str) and t]
+        except Exception:
+            pass
+
     meta = {
         "title": title[:120] if title else "Presentation",
         "description": description,
         "suggestedActions": suggested,
         "systemPrompt": system_prompt,
+        "topics": topics,
         "rawPreview": raw_text[:4000],
     }
     return JSONResponse(content=meta)

@@ -107,11 +107,13 @@ Adapt to the uploaded presentation: "{presentation_title}".
 Ground answers primarily in this deck. When outside scope, say so briefly and proceed with general knowledge if appropriate.
 Use this excerpt to anchor context (do not repeat verbatim unless asked):
 
---- Presentation excerpt (truncated) ---
-{raw_preview[:2000]}
+--- Presentation excerpt  ---
+{raw_preview}
 --- End excerpt ---
 
 Generate a specialized persona and topic framing consistent with the deck. Prefer concise summaries, key takeaways, and actionable suggestions.
 If the question is outside the presentation, note that explicitly.
 """
+
+    print(f"\n\nHere is the raw preview: \n\n{raw_preview}\n\n")
     return preface + "\n\n" + base

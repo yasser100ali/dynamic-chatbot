@@ -24,22 +24,35 @@ export default function TopicsPage() {
           </p>
         </header>
 
-        {mounted && presentationMeta?.suggestedActions && presentationMeta.suggestedActions.length > 0 ? (
-          presentationMeta.suggestedActions.map((s: any, idx: number) => (
-            <section className="space-y-3" key={`topic-${idx}`}>
-              <h2 className="text-xl font-medium">{s.title}</h2>
-              <p className="text-muted-foreground">{s.label}</p>
-            </section>
-          ))
+        {mounted && presentationMeta?.topics && presentationMeta.topics.length > 0 ? (
+          <section className="space-y-3">
+            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
+              {presentationMeta.topics.map((t: string, idx: number) => (
+                <li key={`t-${idx}`}>{t}</li>
+              ))}
+            </ul>
+          </section>
         ) : (
-          <>
-            <section className="space-y-3">
-              <h2 className="text-xl font-medium">No topics yet</h2>
-              <p className="text-muted-foreground">
-                Drop a PDF presentation onto the chat to generate tailored topics.
-              </p>
-            </section>
-          </>
+          <section className="space-y-3">
+            <h2 className="text-xl font-medium">No topics yet</h2>
+            <p className="text-muted-foreground">
+              Drop a PDF presentation onto the chat to generate tailored topics.
+            </p>
+          </section>
+        )}
+
+        {mounted && presentationMeta?.suggestedActions && presentationMeta.suggestedActions.length > 0 && (
+          <section className="space-y-3">
+            <h2 className="text-xl font-medium">Suggested Actions</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              {presentationMeta.suggestedActions.map((s: any, idx: number) => (
+                <div key={`sa-${idx}`} className="rounded-xl border bg-zinc-900/50 px-4 py-3">
+                  <div className="font-medium">{s.title}</div>
+                  <div className="text-muted-foreground text-sm">{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
       </div>
     </main>
