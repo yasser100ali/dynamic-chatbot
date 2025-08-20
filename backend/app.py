@@ -126,7 +126,7 @@ async def presentation_meta(req: PresentationMetaRequest):
                 {
                     "role": "user",
                     "content": (
-                        f"TEXT:\n{raw_text[:6000]}\n\n"
+                        f"TEXT:\n{raw_text[:15000]}\n\n"
                         "Return JSON with keys exactly: {\"title\", \"description\", \"systemPrompt\", \"topics\", \"suggestedActions\"}."
                     ),
                 },
@@ -250,6 +250,6 @@ async def presentation_meta(req: PresentationMetaRequest):
         "suggestedActions": suggested,
         "systemPrompt": system_prompt,
         "topics": topics,
-        "rawPreview": raw_text[:4000],
+        "rawPreview": raw_text[:15000],
     }
     return JSONResponse(content=meta)
