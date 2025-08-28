@@ -41,7 +41,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
     },
     ul: ({ node, children, ...props }) => {
       return (
-        <ul className="list-decimal list-outside ml-4" {...props}>
+        <ul className="list-disc list-outside ml-4" {...props}>
           {children}
         </ul>
       );
@@ -106,6 +106,50 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
         <h6 className="text-sm font-semibold mt-6 mb-2" {...props}>
           {children}
         </h6>
+      );
+    },
+    table: ({ node, children, ...props }) => {
+      return (
+        <div className="w-[80dvw] md:max-w-[720px] overflow-x-auto mt-2 rounded-lg ring-1 ring-border">
+          <table className="w-full text-sm" {...props}>
+            {children}
+          </table>
+        </div>
+      );
+    },
+    thead: ({ node, children, ...props }) => {
+      return (
+        <thead className="bg-muted/60" {...props}>
+          {children}
+        </thead>
+      );
+    },
+    tbody: ({ node, children, ...props }) => {
+      return (
+        <tbody className="divide-y divide-border" {...props}>
+          {children}
+        </tbody>
+      );
+    },
+    tr: ({ node, children, ...props }) => {
+      return (
+        <tr className="even:bg-muted/30 hover:bg-muted/40" {...props}>
+          {children}
+        </tr>
+      );
+    },
+    th: ({ node, children, ...props }) => {
+      return (
+        <th className="text-left font-medium px-3 py-2 whitespace-nowrap border-b border-border" {...props}>
+          {children}
+        </th>
+      );
+    },
+    td: ({ node, children, ...props }) => {
+      return (
+        <td className="px-3 py-2 align-top border-b border-border" {...props}>
+          {children}
+        </td>
       );
     },
   };
